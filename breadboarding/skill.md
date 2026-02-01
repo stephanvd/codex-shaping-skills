@@ -262,6 +262,105 @@ This separation makes the system's behavior explicit.
 
 Routing is a generic mechanism every page uses. Instead of drawing all navigation through a central Router affordance, show `Router navigate()` inline where it happens and wire directly to the destination place.
 
+### Place stores where they enable behavior, not where they're written
+
+A data store belongs in the Place where its data is *consumed* to enable some effect — not where it's produced. Writes from other Places are "reaching into" that Place's state.
+
+To determine where a store belongs:
+1. **Trace read/write relationships** — Who writes? Who reads?
+2. **The readers determine placement** — that's where behavior is enabled
+3. **If only one Place reads**, the store goes inside that Place
+
+Example: A `changedPosts` array is written by a Modal (when user confirms changes) but read by a PAGE_SAVE handler (when user clicks Save). The store belongs with the PAGE_SAVE handler — that's where it enables the persistence operation.
+
+### Only extract to shared areas when truly shared
+
+Before putting a store in a separate DATA STORES section, verify it's actually read by multiple Places. If it only enables behavior in one Place, it belongs inside that Place.
+
+### Nest stores in the subcomponent that reads them
+
+Within a Place, put stores in the subcomponent where they enable behavior. If a store is read by a specific handler, put it in that handler's component — not floating at the Place level.
+
+### Backend is a Place
+
+The database and resolvers aren't floating infrastructure — they're a Place with their own affordances. Database tables (S) belong inside the Backend Place alongside the resolvers (N) that read and write them.
+
+---
+
+## Chunking
+
+Chunking collapses a subsystem into a single node in the main diagram, with details shown separately. Use chunking to manage complexity when a section of the breadboard has:
+
+- **One wire in** (single entry point)
+- **One wire out** (single output)
+- **Lots of internals** between them
+
+### When to Chunk
+
+Look for sections where tracing the wiring reveals a "pinch point" — many affordances that funnel through a single input and single output. These are natural boundaries for chunking.
+
+Example: A `dynamic-form` component receives a form definition, renders many fields (U7a-U7k), validates on change (N26), and emits a single `valid$` signal. In the main diagram, this becomes:
+
+```
+N24 -->|formDefinition| dynamicForm
+dynamicForm -.->|valid$| U8
+```
+
+### How to Chunk
+
+1. **In the main diagram**, replace the subsystem with a single stadium-shaped node:
+   ```mermaid
+   dynamicForm[["CHUNK: dynamic-form"]]
+   ```
+
+2. **Wire to/from the chunk** using the boundary signals:
+   ```mermaid
+   N24 -->|formDefinition| dynamicForm
+   dynamicForm -.->|valid$| U8
+   ```
+
+3. **Create a separate chunk diagram** showing the internals with boundary markers:
+   ```mermaid
+   flowchart TB
+       input([formDefinition])
+       output([valid$])
+
+       subgraph chunk["dynamic-form internals"]
+           N25["N25: generateFormConfig()"]
+           U7a["U7a: field"]
+           N26["N26: form value changes"]
+           N27["N27: valid$ emission"]
+       end
+
+       input --> N25
+       N25 --> U7a
+       U7a --> N26
+       N26 --> N27
+       N27 --> output
+
+       classDef boundary fill:#b3e5fc,stroke:#0288d1,stroke-dasharray:5 5
+       class input,output boundary
+   ```
+
+4. **Style chunks distinctly** in the main diagram:
+   ```
+   classDef chunk fill:#b3e5fc,stroke:#0288d1,color:#000,stroke-width:2px
+   class dynamicForm chunk
+   ```
+
+### Chunk Color Convention
+
+| Type | Color | Hex |
+|------|-------|-----|
+| Chunk node (main diagram) | Light blue | `#b3e5fc` |
+| Boundary markers (chunk diagram) | Light blue, dashed | `#b3e5fc` with `stroke-dasharray:5 5` |
+
+### Benefits
+
+- **Main diagram stays readable** — complex subsystems become single nodes
+- **Detail preserved** — chunk diagrams show the internals when needed
+- **Natural boundaries** — chunks often map to reusable components
+
 ---
 
 ## Visualization (Mermaid)
@@ -301,12 +400,14 @@ flowchart TB
 |------|-------|-----|
 | UI affordances | Pink | `#ffb6c1` |
 | Code affordances | Grey | `#d3d3d3` |
-| Component references | Lavender | `#e6e6fa` |
+| Data stores | Lavender | `#e6e6fa` |
+| Chunks | Light blue | `#b3e5fc` |
 
 ```
 classDef ui fill:#ffb6c1,stroke:#d87093,color:#000
 classDef nonui fill:#d3d3d3,stroke:#808080,color:#000
-classDef component fill:#e6e6fa,stroke:#9370db,color:#000
+classDef store fill:#e6e6fa,stroke:#9370db,color:#000
+classDef chunk fill:#b3e5fc,stroke:#0288d1,color:#000,stroke-width:2px
 ```
 
 ### Subgraph Labels
@@ -337,6 +438,51 @@ flowchart TB
     N1 --> N10
     N10 --> N11
 ```
+
+### Workflow Step Annotations (Optional)
+
+When breadboarding a specific workflow, you can optionally add numbered step markers to help readers follow the sequence visually. This is useful when:
+- The diagram is complex and the workflow path isn't obvious
+- You want to guide someone through a specific user journey
+- The breadboard will be used as a walkthrough or teaching tool
+
+**Format:**
+
+Add a Workflow Guide table before the diagram:
+
+```markdown
+| Step | Action | Where to look |
+|------|--------|---------------|
+| **1** | Click "Edit" button | U1 → N1 → S1 |
+| **2** | Edit mode activates | S1 → N2 → U3 |
+| **3** | Click "Add" | U3 → N3 → N8 |
+```
+
+Add step marker nodes in the Mermaid diagram using stadium-shaped nodes:
+
+```mermaid
+flowchart TB
+    %% Step markers
+    step1(["1 - CLICK EDIT"])
+    step2(["2 - EDIT MODE ON"])
+    step3(["3 - CLICK ADD"])
+
+    %% Connect steps to relevant affordances with dashed lines
+    step1 -.-> U1
+    step2 -.-> N2
+    step3 -.-> U3
+
+    %% Style step markers green
+    classDef step fill:#90EE90,stroke:#228B22,color:#000,font-weight:bold
+    class step1,step2,step3 step
+```
+
+**Formatting notes:**
+- Use `"1 - ACTION"` format (number, space, hyphen, space, action)
+- Avoid `"1. ACTION"` — the period triggers Mermaid's markdown list parser
+- Avoid `"1) ACTION"` — parentheses can also cause parsing issues
+- Connect step markers to affordances with dashed lines (`-.->`)
+- Style steps green to distinguish from UI (pink) and Code (grey) affordances
 
 ---
 
