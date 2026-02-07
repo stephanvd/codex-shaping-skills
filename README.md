@@ -16,7 +16,7 @@ Credits: inspired by Ryan Singer’s thread, [Shaping 0-1 with Claude Code](http
 
 ```bash
 # Clone the repo, then symlink each skill into your Codex skills directory
-git clone https://github.com/rjs/shaping-skills.git ~/.local/share/shaping-skills
+git clone https://github.com/stephanvd/codex-shaping-skills.git ~/.local/share/shaping-skills
 mkdir -p "$CODEX_HOME/skills"
 ln -s ~/.local/share/shaping-skills/breadboarding "$CODEX_HOME/skills/breadboarding"
 ln -s ~/.local/share/shaping-skills/shaping "$CODEX_HOME/skills/shaping"
