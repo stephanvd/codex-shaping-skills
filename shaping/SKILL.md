@@ -291,7 +291,7 @@ Avoid:
 
 ## Breadboards
 
-Use the `/breadboarding` skill to map existing systems or detail a shape into concrete affordances. Breadboarding produces:
+Use the `$breadboarding` skill to map existing systems or detail a shape into concrete affordances. Breadboarding produces:
 - UI Affordances table
 - Non-UI Affordances table
 - Wiring diagram grouped by Place
@@ -429,7 +429,7 @@ Use "Detail X" (not a new letter) to show this is a breakdown of Shape X, not an
 
 ### What Detailing Produces
 
-Use the `/breadboarding` skill to produce:
+Use the `$breadboarding` skill to produce:
 - **UI Affordances table** — Things users see and interact with (inputs, buttons, displays)
 - **Non-UI Affordances table** — Data stores, handlers, queries, services
 - **Wiring diagram** — How affordances connect across places
@@ -756,12 +756,12 @@ See **Multi-Level Consistency** at the top of this document. Changes at any leve
 
 ## Slicing
 
-After a shape is breadboarded, slice it into vertical implementation increments. Use the `/breadboarding` skill for the slicing process — it defines what vertical slices are, the procedure for creating them, and visualization formats.
+After a shape is breadboarded, slice it into vertical implementation increments. Use the `$breadboarding` skill for the slicing process — it defines what vertical slices are, the procedure for creating them, and visualization formats.
 
 **The flow:**
 1. **Parts** → high-level mechanisms in the shape
-2. **Breadboard** → concrete affordances with wiring (use `/breadboarding`)
-3. **Slices** → vertical increments that can each be demoed (use `/breadboarding` slicing section)
+2. **Breadboard** → concrete affordances with wiring (use `$breadboarding`)
+3. **Slices** → vertical increments that can each be demoed (use `$breadboarding` slicing section)
 
 **Key principle:** Every slice must end in demo-able UI. A slice without visible output is a horizontal layer, not a vertical slice.
 
